@@ -151,6 +151,8 @@ class Fudan:
         logging.debug("关闭会话")
         # sys_exit() 通知完成再退出 注释掉
 
+debug = False
+
 class Zlapp(Fudan):
     last_info = ''
 
@@ -168,7 +170,7 @@ class Zlapp(Fudan):
         position = last_info["d"]["info"]['geo_api_info']
         position = json_loads(position)
 
-        if s_sfzx.__name__ == '<lambda>':
+        if debug:
             logging.info("上一次提交地址为: %s" % position['formattedAddress'])
         else:
             logging.info("上一次提交地址为: ***" )
