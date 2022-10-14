@@ -8,6 +8,7 @@ gl_info = "快去手动填写！"
 url_login = r'https://uis.fudan.edu.cn/authserver/login?service=https%3A%2F%2Fzlapp.fudan.edu.cn%2Fa_fudanzlapp%2Fapi%2Fsso%2Findex%3Fredirect%3Dhttps%253A%252F%252Fzlapp.fudan.edu.cn%252Fsite%252Fncov%252FfudanDaily%26from%3Dwap'
 url_info = r'https://zlapp.fudan.edu.cn/ncov/wap/fudan/get-info?vpn-12-o2-zlapp.fudan.edu.cn'
 
+
 def set_q(iterO):
     res = list()
     for item in iterO:
@@ -15,9 +16,13 @@ def set_q(iterO):
             res.append(item)
     return res
 
+
+debug = False
+
+
 def check():
-##    test_info = {'sfzx':0}
-##    print(s_sfzx(test_info))
+    ##    test_info = {'sfzx':0}
+    ##    print(s_sfzx(test_info))
     headers = {
         "accept": "application/json, text/plain, */*",
         "accept-encoding": "gzip, deflate, br",
@@ -31,12 +36,12 @@ def check():
     position = last_info["d"]["info"]['geo_api_info']
     position = json_loads(position)
     print(f'上一次提交日期为(WebVPN): {last_info["d"]["info"]["date"]}')
-    
-    if s_sfzx.__name__ == '<lambda>':
+
+    if debug:
         print(f'上一次提交地址为(WebVPN): {position["formattedAddress"]}')
     else:
         print(f'上一次提交地址为(WebVPN): ***')
-    
+
     today = time.strftime("%Y%m%d", time.localtime())
     if last_info["d"]["info"]["date"] == today:
         print("今日已提交(WebVPN)")
@@ -50,10 +55,11 @@ def check():
         _old_info = last_info["d"]["oldInfo"]
         return False
 
+
 def checkin(captcha):
     headers = {
-        "Referer"   : "https://zlapp.fudan.edu.cn/site/ncov/fudanDaily?from=history",
-        "TE"        : "Trailers",
+        "Referer": "https://zlapp.fudan.edu.cn/site/ncov/fudanDaily?from=history",
+        "TE": "Trailers",
     }
     geo_api_info = json_loads(_last_info["geo_api_info"])
     province = geo_api_info["addressComponent"].get("province", "")
@@ -61,26 +67,26 @@ def checkin(captcha):
     district = geo_api_info["addressComponent"].get("district", "")
     _last_info.update(
         {
-            "tw"      : "13",
+            "tw": "13",
             "province": province,
-            "city"    : city,
-            "area"    : " ".join(set_q((province, city, district))),
-            "ismoved" : 0,
-            "geo_api_info" : geoDisturbance(_last_info["geo_api_info"])
+            "city": city,
+            "area": " ".join(set_q((province, city, district))),
+            "ismoved": 0,
+            "geo_api_info": geoDisturbance(_last_info["geo_api_info"])
         }
     )
     for i in range(3):
         captcha_text = captcha()
-        #captcha_text = 'abcd'
+        # captcha_text = 'abcd'
         _last_info.update({
             'sfzx': s_sfzx(_old_info),
             'code': captcha_text
         })
         save = vpn.post(
-                'https://zlapp.fudan.edu.cn/ncov/wap/fudan/save',
-                data=_last_info,
-                headers=headers,
-                allow_redirects=False)
+            'https://zlapp.fudan.edu.cn/ncov/wap/fudan/save',
+            data=_last_info,
+            headers=headers,
+            allow_redirects=False)
         print(save.text)
         save_msg = json_loads(save.text)["m"]
         if save_msg != '验证码错误':
@@ -88,6 +94,7 @@ def checkin(captcha):
         else:
             captcha.reportError()
             print('captcha.reportError')
+
 
 def dailyFudan(uid, psw, uname, pwd, info, lc_s_sfzx=None):
     global vpn, s_sfzx
@@ -106,9 +113,10 @@ def dailyFudan(uid, psw, uname, pwd, info, lc_s_sfzx=None):
         if check():
             info("平安复旦：今日已提交(WebVPN)", gl_info)
             return True
-        
+
         def captcha_info(message):
             info(message, gl_info)
+
         captcha = DailyFDCaptcha(uname, pwd, vpn, captcha_info)
         checkin(captcha)
 
@@ -121,4 +129,3 @@ def dailyFudan(uid, psw, uname, pwd, info, lc_s_sfzx=None):
             return False
     finally:
         vpn.close()
-
